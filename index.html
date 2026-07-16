@@ -2,20 +2,40 @@
 <html>
 <head>
     <title>Background Remover</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        #result { margin-top: 20px; max-width: 90%; height: auto; border-radius: 8px; }
+    </style>
 </head>
 <body>
-    <h2>Upload Image</h2>
+    <h2>AI Background Remover</h2>
 
-    <input type="file" id="file">
-    <button onclick="upload()">Remove Background</button>
+    <input type="file" id="file" accept="image/*">
+    <button id="uploadBtn" onclick="upload()">Remove Background</button>
 
     <br><br>
-
+    <p id="status" style="color: blue; font-weight: bold;"></p>
     <img id="result" width="300">
 
 <script>
 function upload() {
-    let file = document.getElementById("file").files[0];
+    let fileInput = document.getElementById("file");
+    let file = fileInput.files[0];
+    let statusText = document.getElementById("status");
+    let button = document.getElementById("uploadBtn");
+    
+    if (!file) {
+        alert("कृपया पहले एक इमेज चुनें!");
+        return;
+    }
+
+    // लोडिंग स्टेट चालू करें
+    statusText.innerText = "Processing... (पहली इमेज में 1-2 मिनट लग सकते हैं)";
+    button.disabled = true;
+    document.getElementById("result").src = "";
+
     let formData = new FormData();
     formData.append("image", file);
 
@@ -23,10 +43,19 @@ function upload() {
         method: "POST",
         body: formData
     })
-    .then(res => res.blob())
+    .then(res => {
+        if (!res.ok) throw new Error("Memory Limit Exceeded");
+        return res.blob();
+    })
     .then(blob => {
-        document.getElementById("result").src =
-            URL.createObjectURL(blob);
+        document.getElementById("result").src = URL.createObjectURL(blob);
+        statusText.innerText = "सफलतापूर्वक बैकग्राउंड हट गया!";
+        button.disabled = false;
+    })
+    .catch(err => {
+        statusText.innerText = "त्रुटि: सर्वर की मेमोरी फुल हो गई। कृपया छोटी इमेज ट्राई करें।";
+        button.disabled = false;
+        console.error(err);
     });
 }
 </script>
