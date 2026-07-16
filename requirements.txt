@@ -1,3 +1,4 @@
 rembg
 gradio
 pillow
+gunicorn
